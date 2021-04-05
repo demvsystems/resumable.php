@@ -73,9 +73,10 @@ class ResumableTest extends TestCase
                 ]
             );
 
+        $mockMethod = PHP_VERSION_ID > 70100 ? 'onlyMethods' : 'setMethods';
         $this->resumable = $this->getMockBuilder(Resumable::class)
             ->setConstructorArgs([$this->request, $this->response])
-            ->onlyMethods(['handleChunk'])
+            ->$mockMethod(['handleChunk'])
             ->getMock();
 
         $this->resumable->expects($this->once())
@@ -101,9 +102,10 @@ class ResumableTest extends TestCase
             'http://example.com'
         )->withQueryParams($resumableParams);
 
+        $mockMethod = PHP_VERSION_ID > 70100 ? 'onlyMethods' : 'setMethods';
         $this->resumable = $this->getMockBuilder(Resumable::class)
             ->setConstructorArgs([$this->request, $this->response])
-            ->onlyMethods(['handleTestChunk'])
+            ->$mockMethod(['handleTestChunk'])
             ->getMock();
 
         $this->resumable->expects($this->once())
