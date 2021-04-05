@@ -8,7 +8,7 @@
         }
     ],
     "require": {
-        "php": ">=5.3.0",
+        "php": "^7.1 || ^8.0",
         "cakephp/filesystem": "^3.0",
         "monolog/monolog": "^1.17"
     },
