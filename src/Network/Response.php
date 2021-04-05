@@ -1,5 +1,5 @@
 <?php
-namespace Dilab\Network;
+namespace ResumableJs\Network;
 
 interface Response {
 

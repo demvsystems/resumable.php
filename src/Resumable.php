@@ -1,11 +1,11 @@
 <?php
 
-namespace Dilab;
+namespace ResumableJs;
 
 use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
-use Dilab\Network\Request;
-use Dilab\Network\Response;
+use ResumableJs\Network\Request;
+use ResumableJs\Network\Response;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 

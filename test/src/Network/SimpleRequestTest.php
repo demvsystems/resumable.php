@@ -1,11 +1,11 @@
 <?php
-namespace Dilab\Network;
+namespace ResumableJs\Network;
 
-use Dilab\Network\Request;
+use ResumableJs\Network\Request;
 
 /**
  * Class SimpleRequestTest
- * @package Dilab\Network
+ * @package ResumableJs\Network
  * @property $request Request
  */
 class SimpleRequestTest extends \PHPUnit_Framework_TestCase

@@ -18,12 +18,12 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Dilab\\": "src/"
+      "ResumableJs\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Dilab\\Test\\": "test/src/"
+      "ResumableJs\\Test\\": "test/src/"
     }
   }
 }

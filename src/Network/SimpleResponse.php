@@ -1,7 +1,7 @@
 <?php
-namespace Dilab\Network;
+namespace ResumableJs\Network;
 
-use Dilab\Network\Response;
+use ResumableJs\Network\Response;
 
 class SimpleResponse implements Response
 {

@@ -1,13 +1,13 @@
 <?php
-namespace Dilab\Test;
+namespace ResumableJs\Test;
 
-use Dilab\Network\SimpleRequest;
-use Dilab\Resumable;
+use ResumableJs\Network\SimpleRequest;
+use ResumableJs\Resumable;
 use Cake\Filesystem\File;
 
 /**
  * Class ResumbableTest
- * @package Dilab\Test
+ * @package ResumableJs\Test
  * @property $resumbable Resumable
  * @property $request Request
  * @property $response Response
@@ -20,10 +20,10 @@ class ResumbableTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->request = $this->getMockBuilder('Dilab\Network\SimpleRequest')
+        $this->request = $this->getMockBuilder('ResumableJs\Network\SimpleRequest')
                         ->getMock();
 
-        $this->response = $this->getMockBuilder('Dilab\Network\SimpleResponse')
+        $this->response = $this->getMockBuilder('ResumableJs\Network\SimpleResponse')
                         ->getMock();
     }
 
@@ -57,7 +57,7 @@ class ResumbableTest extends \PHPUnit_Framework_TestCase
 
         $this->request->method('data')->willReturn($resumableParams);
 
-        $this->resumbable = $this->getMockBuilder('Dilab\Resumable')
+        $this->resumbable = $this->getMockBuilder('ResumableJs\Resumable')
                                 ->setConstructorArgs(array($this->request,$this->response))
                                 ->setMethods(array('handleChunk'))
                                 ->getMock();
@@ -86,7 +86,7 @@ class ResumbableTest extends \PHPUnit_Framework_TestCase
 
         $this->request->method('data')->willReturn($resumableParams);
 
-        $this->resumbable = $this->getMockBuilder('Dilab\Resumable')
+        $this->resumbable = $this->getMockBuilder('ResumableJs\Resumable')
                                 ->setConstructorArgs(array($this->request,$this->response))
                                 ->setMethods(array('handleTestChunk'))
                                 ->getMock();
@@ -169,7 +169,7 @@ class ResumbableTest extends \PHPUnit_Framework_TestCase
             'resumableRelativePath'=> 'upload',
         );
 
-        $this->request = $this->getMockBuilder('Dilab\Network\SimpleRequest')
+        $this->request = $this->getMockBuilder('ResumableJs\Network\SimpleRequest')
             ->getMock();
 
         $this->request->method('is')

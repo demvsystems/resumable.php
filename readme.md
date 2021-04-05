@@ -17,9 +17,9 @@ composer require code-lts/resumable.php
 <?php
 include 'vendor/autoload.php';
 
-use Dilab\Network\SimpleRequest;
-use Dilab\Network\SimpleResponse;
-use Dilab\Resumable;
+use ResumableJs\Network\SimpleRequest;
+use ResumableJs\Network\SimpleResponse;
+use ResumableJs\Resumable;
 
 $request = new SimpleRequest();
 $response = new SimpleResponse();

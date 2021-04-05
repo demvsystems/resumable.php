@@ -1,11 +1,11 @@
 <?php
-namespace Dilab\Network;
+namespace ResumableJs\Network;
 
-use Dilab\Network\Response;
+use ResumableJs\Network\Response;
 
 /**
  * Class SimpleResponseTest
- * @package Dilab\Network
+ * @package ResumableJs\Network
  * @property $response Response
  */
 class SimpleResponseTest extends \PHPUnit_Framework_TestCase

@@ -1,7 +1,7 @@
 <?php
-namespace Dilab\Network;
+namespace ResumableJs\Network;
 
-use Dilab\Network\Request;
+use ResumableJs\Network\Request;
 
 class SimpleRequest implements Request
 {
