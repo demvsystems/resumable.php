@@ -16,6 +16,11 @@
         "phpunit/phpunit": "^7 || ^8 || ^9",
         "wdes/coding-standard": "^3.0"
     },
+    "scripts": {
+        "phpunit": "./vendor/bin/phpunit",
+        "phpcs": "./vendor/bin/phpcs",
+        "phpcbf": "./vendor/bin/phpcbf"
+    },
     "license": "MIT",
     "autoload": {
         "psr-4": {
