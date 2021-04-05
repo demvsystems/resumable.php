@@ -2,20 +2,21 @@
 namespace ResumableJs\Network;
 
 use ResumableJs\Network\Request;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Class SimpleRequestTest
  * @package ResumableJs\Network
  * @property $request Request
  */
-class SimpleRequestTest extends \PHPUnit_Framework_TestCase
+class SimpleRequestTest extends TestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->request = new SimpleRequest();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         unset($this->request);
         parent::tearDown();

@@ -4,6 +4,7 @@ namespace ResumableJs\Test;
 use ResumableJs\Network\SimpleRequest;
 use ResumableJs\Resumable;
 use Cake\Filesystem\File;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Class ResumbableTest
@@ -12,13 +13,13 @@ use Cake\Filesystem\File;
  * @property $request Request
  * @property $response Response
  */
-class ResumbableTest extends \PHPUnit_Framework_TestCase
+class ResumbableTest extends TestCase
 {
     public $resumbable;
 
     protected $provider;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->request = $this->getMockBuilder('ResumableJs\Network\SimpleRequest')
                         ->getMock();
@@ -27,7 +28,7 @@ class ResumbableTest extends \PHPUnit_Framework_TestCase
                         ->getMock();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         unset($this->request);
         unset($this->response);

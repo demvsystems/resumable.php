@@ -2,20 +2,21 @@
 namespace ResumableJs\Network;
 
 use ResumableJs\Network\Response;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Class SimpleResponseTest
  * @package ResumableJs\Network
  * @property $response Response
  */
-class SimpleResponseTest extends \PHPUnit_Framework_TestCase
+class SimpleResponseTest extends TestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->response = new SimpleResponse();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         unset($this->response);
         parent::tearDown();
