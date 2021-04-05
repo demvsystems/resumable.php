@@ -4,8 +4,9 @@ declare(strict_types = 1);
 
 namespace ResumableJs;
 
-use Cake\Filesystem\File;
-use Cake\Filesystem\Folder;
+use Gaufrette\Filesystem;
+use Gaufrette\Adapter\Local as LocalFilesystemAdapter;
+use Gaufrette\StreamMode;
 use Psr\Log\LoggerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -55,6 +56,13 @@ class Resumable
      */
     protected $logger;
 
+    /**
+     * The file system
+     *
+     * @var Filesystem
+     */
+    protected $fileSystem;
+
     protected $filename;
 
     protected $filepath;
@@ -78,14 +86,27 @@ class Resumable
     public function __construct(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        ?LoggerInterface $logger = null
+        ?LoggerInterface $logger = null,
+        ?Filesystem $fileSystem = null
     ) {
-        $this->request  = $request;
-        $this->response = $response;
+        $this->request    = $request;
+        $this->response   = $response;
+        $this->fileSystem = $fileSystem === null ? $this->getFileSystem() : $fileSystem;
 
         $this->logger = $logger;
 
         $this->preProcess();
+    }
+
+    protected function getFileSystem(): Filesystem
+    {
+        $cwd = getcwd();
+        $cwd === false ? __DIR__ : $cwd;
+        $adapter = new LocalFilesystemAdapter(
+            $cwd
+        );
+
+        return new Filesystem($adapter);
     }
 
     public function setResumableOption(array $resumableOption)
@@ -241,11 +262,12 @@ class Resumable
     /**
      * Create the final file from chunks
      */
-    private function createFileAndDeleteTmp($identifier, $filename)
+    private function createFileAndDeleteTmp(string $identifier, ?string $filename): void
     {
-        $tmpFolder  = new Folder($this->tmpChunkDir($identifier));
-        $chunkFiles = $tmpFolder->read(true, true, true)[1];
-
+        $chunkDir   = $this->tmpChunkDir($identifier);
+        $chunkFiles = $this->fileSystem->listKeys(
+            $chunkDir
+        )['keys'];
         // if the user has set a custom filename
         if (null !== $this->filename) {
             $finalFilename = $this->createSafeFilename($this->filename, $filename);
@@ -258,7 +280,7 @@ class Resumable
         $this->extension = $this->findExtension($this->filepath);
 
         if ($this->createFileFromChunks($chunkFiles, $this->filepath) && $this->deleteTmpFolder) {
-            $tmpFolder->delete();
+            $this->fileSystem->delete($chunkDir);
             $this->uploadComplete = true;
         }
     }
@@ -300,19 +322,14 @@ class Resumable
     public function isChunkUploaded($identifier, $filename, $chunkNumber)
     {
         $chunkDir = $this->tmpChunkDir($identifier) . DIRECTORY_SEPARATOR;
-        $file     = new File(
+        return $this->fileSystem->has(
             $chunkDir . $this->tmpChunkFilename($filename, $chunkNumber)
         );
-        return $file->exists();
     }
 
-    public function tmpChunkDir($identifier)
+    public function tmpChunkDir($identifier): string
     {
-        $tmpChunkDir = $this->tempFolder . DIRECTORY_SEPARATOR . $identifier;
-        if (!file_exists($tmpChunkDir)) {
-            mkdir($tmpChunkDir, 0777, true);
-        }
-        return $tmpChunkDir;
+        return $this->tempFolder . DIRECTORY_SEPARATOR . $identifier;
     }
 
     public function tmpChunkFilename($filename, $chunkNumber)
@@ -320,46 +337,33 @@ class Resumable
         return $filename . '.' . str_pad((string) $chunkNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    public function getExclusiveFileHandle($name)
-    {
-        // if the file exists, fopen() will raise a warning
-        $previous_error_level = error_reporting();
-        error_reporting(E_ERROR);
-        $handle = fopen($name, 'x');
-        error_reporting($previous_error_level);
-        return $handle;
-    }
-
-    public function createFileFromChunks($chunkFiles, $destFile)
+    public function createFileFromChunks(array $chunkFiles, string $destFile): bool
     {
         $this->log('Beginning of create files from chunks');
 
         natsort($chunkFiles);
 
-        $handle = $this->getExclusiveFileHandle($destFile);
-        if (!$handle) {
-            return false;
-        }
+        $stream = $this->fileSystem->createFile($destFile)->createStream();
+        $stream->open(new StreamMode('x'));
 
-        $destFile         = new File($destFile);
-        $destFile->handle = $handle;
         foreach ($chunkFiles as $chunkFile) {
-            $file = new File($chunkFile);
-            $destFile->append($file->read());
-
+            $stream->write($this->fileSystem->read($chunkFile));
             $this->log('Append ', ['chunk file' => $chunkFile]);
         }
 
+        $stream->flush();
+        $stream->close();
+
         $this->log('End of create files from chunks');
-        return $destFile->exists();
+        return $this->fileSystem->has($destFile);
     }
 
-    public function setRequest($request)
+    public function setRequest(ServerRequestInterface $request): void
     {
         $this->request = $request;
     }
 
-    public function setResponse($response)
+    public function setResponse(ResponseInterface $response): void
     {
         $this->response = $response;
     }
