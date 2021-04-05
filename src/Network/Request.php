@@ -1,11 +1,15 @@
 <?php
+
+declare(strict_types = 1);
+
 namespace ResumableJs\Network;
 
-interface Request {
+interface Request
+{
 
     /**
      * @param $type get/post
-     * @return boolean
+     * @return bool
      */
     public function is($type);
 
@@ -19,4 +23,5 @@ interface Request {
      * @return FILES data
      */
     public function file();
+
 }

@@ -9,4 +9,6 @@
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>*/build/*</exclude-pattern>
     <rule ref="Wdes"></rule>
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax"></rule>
+
 </ruleset>

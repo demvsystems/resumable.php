@@ -1,7 +1,11 @@
 <?php
+
+declare(strict_types = 1);
+
 namespace ResumableJs\Network;
 
-interface Response {
+interface Response
+{
 
     /**
      * @param $statusCode
