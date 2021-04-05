@@ -5,7 +5,9 @@
 
 To install, use composer:
 
-``` composer require dilab/resumable.php ```
+```sh
+composer require code-lts/resumable.php
+```
 
 
 ## How to use
