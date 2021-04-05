@@ -10,7 +10,7 @@
     "require": {
         "php": "^7.1 || ^8.0",
         "cakephp/filesystem": "^3.0",
-        "monolog/monolog": "^1.17"
+        "psr/log": "^1.1"
     },
     "require-dev": {
         "phpunit/phpunit": "^7 || ^8 || ^9",

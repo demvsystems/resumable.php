@@ -8,12 +8,15 @@ use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
 use ResumableJs\Network\Request;
 use ResumableJs\Network\Response;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
+use Psr\Log\LoggerInterface;
 
 class Resumable
 {
-    public $debug = false;
+    /**
+     * Debug is enabled
+     * @var bool
+     */
+    protected $debug = false;
 
     public $tempFolder = 'tmp';
 
@@ -30,7 +33,12 @@ class Resumable
 
     protected $chunkFile;
 
-    protected $log;
+    /**
+     * The logger
+     *
+     * @var LoggerInterface|null
+     */
+    protected $logger;
 
     protected $filename;
 
@@ -52,13 +60,12 @@ class Resumable
 
     public const WITHOUT_EXTENSION = true;
 
-    public function __construct(Request $request, Response $response)
+    public function __construct(Request $request, Response $response, ?LoggerInterface $logger = null)
     {
         $this->request  = $request;
         $this->response = $response;
 
-        $this->log = new Logger('debug');
-        $this->log->pushHandler(new StreamHandler('debug.log', Logger::DEBUG));
+        $this->logger = $logger;
 
         $this->preProcess();
     }
@@ -68,7 +75,7 @@ class Resumable
         $this->resumableOption = array_merge($this->resumableOption, $resumableOption);
     }
 
-    // sets original filename and extenstion, blah blah
+    // sets original filename and extension, blah blah
     public function preProcess()
     {
         if (!empty($this->resumableParams())) {
@@ -343,8 +350,8 @@ class Resumable
 
     private function log($msg, $ctx = [])
     {
-        if ($this->debug) {
-            $this->log->addDebug($msg, $ctx);
+        if ($this->debug && $this->logger !== null) {
+            $this->logger->debug($msg, $ctx);
         }
     }
 
@@ -364,4 +371,8 @@ class Resumable
         return str_replace(sprintf('.%s', $ext), '', $filename);
     }
 
+    public function setDebug(bool $debug): void
+    {
+        $this->debug = $debug;
+    }
 }
