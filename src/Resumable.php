@@ -22,7 +22,12 @@ class Resumable
 
     public $uploadFolder = 'test/files/uploads';
 
-    // for testing
+    /**
+     * For testing purposes
+     *
+     * @var bool
+     * @internal Only used by tests, do not use it
+     */
     public $deleteTmpFolder = true;
 
     /**
@@ -181,7 +186,7 @@ class Resumable
     }
 
     /**
-     * Makes sure the orginal extension never gets overriden by user defined filename.
+     * Makes sure the original extension never gets overridden by user defined filename.
      *
      * @param string User defined filename
      * @param string Original filename
@@ -219,9 +224,10 @@ class Resumable
         $totalSize   = $this->resumableParam($this->resumableOption['totalSize']);
 
         if (!$this->isChunkUploaded($identifier, $filename, $chunkNumber)) {
-            $chunkFile = $this->tmpChunkDir($identifier) . DIRECTORY_SEPARATOR
-                        . $this->tmpChunkFilename($filename, $chunkNumber);
-            $this->moveUploadedFile($file->getStream()->getMetadata('uri'), $chunkFile);
+            $chunkDir  = $this->tmpChunkDir($identifier) . DIRECTORY_SEPARATOR;
+            $chunkFile = $chunkDir . $this->tmpChunkFilename($filename, $chunkNumber);
+
+            $file->moveTo($chunkFile);
         }
 
         if ($this->isFileUploadComplete($filename, $identifier, $chunkSize, $totalSize)) {
@@ -293,9 +299,9 @@ class Resumable
 
     public function isChunkUploaded($identifier, $filename, $chunkNumber)
     {
-        $file = new File(
-            $this->tmpChunkDir($identifier)
-            . DIRECTORY_SEPARATOR . $this->tmpChunkFilename($filename, $chunkNumber)
+        $chunkDir = $this->tmpChunkDir($identifier) . DIRECTORY_SEPARATOR;
+        $file     = new File(
+            $chunkDir . $this->tmpChunkFilename($filename, $chunkNumber)
         );
         return $file->exists();
     }
@@ -346,15 +352,6 @@ class Resumable
 
         $this->log('End of create files from chunks');
         return $destFile->exists();
-    }
-
-    public function moveUploadedFile($file, $destFile)
-    {
-        $file = new File($file);
-        if ($file->exists()) {
-            return $file->copy($destFile);
-        }
-        return false;
     }
 
     public function setRequest($request)
