@@ -6,9 +6,9 @@ namespace ResumableJs;
 
 use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
-use ResumableJs\Network\Request;
-use ResumableJs\Network\Response;
 use Psr\Log\LoggerInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 class Resumable
 {
@@ -25,8 +25,18 @@ class Resumable
     // for testing
     public $deleteTmpFolder = true;
 
+    /**
+     * The request
+     *
+     * @var ServerRequestInterface
+     */
     protected $request;
 
+    /**
+     * The response
+     *
+     * @var ResponseInterface
+     */
     protected $response;
 
     protected $params;
@@ -60,8 +70,11 @@ class Resumable
 
     public const WITHOUT_EXTENSION = true;
 
-    public function __construct(Request $request, Response $response, ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        ?LoggerInterface $logger = null
+    ) {
         $this->request  = $request;
         $this->response = $response;
 
@@ -79,22 +92,26 @@ class Resumable
     public function preProcess()
     {
         if (!empty($this->resumableParams())) {
-            if (!empty($this->request->file())) {
+            if (!empty($this->request->getUploadedFiles())) {
                 $this->extension        = $this->findExtension($this->resumableParam('filename'));
                 $this->originalFilename = $this->resumableParam('filename');
             }
         }
     }
 
+    /**
+     * @return ResponseInterface|null
+     */
     public function process()
     {
         if (!empty($this->resumableParams())) {
-            if (!empty($this->request->file())) {
-                $this->handleChunk();
+            if (!empty($this->request->getUploadedFiles())) {
+                return $this->handleChunk();
             } else {
-                $this->handleTestChunk();
+                return $this->handleTestChunk();
             }
         }
+        return null;
     }
 
     /**
@@ -185,15 +202,16 @@ class Resumable
         $chunkNumber = $this->resumableParam($this->resumableOption['chunkNumber']);
 
         if (!$this->isChunkUploaded($identifier, $filename, $chunkNumber)) {
-            return $this->response->header(204);
+            return $this->response->withStatus(204);
         } else {
-            return $this->response->header(200);
+            return $this->response->withStatus(200);
         }
     }
 
     public function handleChunk()
     {
-        $file        = $this->request->file();
+        /** @var \Psr\Http\Message\UploadedFileInterface $file */
+        $file        = $this->request->getUploadedFiles()[0];
         $identifier  = $this->resumableParam($this->resumableOption['identifier']);
         $filename    = $this->resumableParam($this->resumableOption['filename']);
         $chunkNumber = $this->resumableParam($this->resumableOption['chunkNumber']);
@@ -203,7 +221,7 @@ class Resumable
         if (!$this->isChunkUploaded($identifier, $filename, $chunkNumber)) {
             $chunkFile = $this->tmpChunkDir($identifier) . DIRECTORY_SEPARATOR
                         . $this->tmpChunkFilename($filename, $chunkNumber);
-            $this->moveUploadedFile($file['tmp_name'], $chunkFile);
+            $this->moveUploadedFile($file->getStream()->getMetadata('uri'), $chunkFile);
         }
 
         if ($this->isFileUploadComplete($filename, $identifier, $chunkSize, $totalSize)) {
@@ -211,7 +229,7 @@ class Resumable
             $this->createFileAndDeleteTmp($identifier, $filename);
         }
 
-        return $this->response->header(200);
+        return $this->response->withStatus(200);
     }
 
     /**
@@ -250,12 +268,13 @@ class Resumable
 
     public function resumableParams()
     {
-        if ($this->request->is('get')) {
-            return $this->request->data('get');
+        $method = strtoupper($this->request->getMethod());
+        if ($method === 'GET') {
+            return $this->request->getQueryParams();
+        } elseif ($method === 'POST') {
+            return $this->request->getParsedBody();
         }
-        if ($this->request->is('post')) {
-            return $this->request->data('post');
-        }
+        return [];
     }
 
     public function isFileUploadComplete($filename, $identifier, $chunkSize, $totalSize)
@@ -285,7 +304,7 @@ class Resumable
     {
         $tmpChunkDir = $this->tempFolder . DIRECTORY_SEPARATOR . $identifier;
         if (!file_exists($tmpChunkDir)) {
-            mkdir($tmpChunkDir);
+            mkdir($tmpChunkDir, 0777, true);
         }
         return $tmpChunkDir;
     }
@@ -375,4 +394,5 @@ class Resumable
     {
         $this->debug = $debug;
     }
+
 }

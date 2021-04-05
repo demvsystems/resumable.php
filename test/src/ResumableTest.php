@@ -6,26 +6,38 @@ namespace ResumableJs\Test;
 
 use ResumableJs\Resumable;
 use PHPUnit\Framework\TestCase;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Nyholm\Psr7\UploadedFile;
 
-/**
- * Class ResumbableTest
- * @property $resumbable Resumable
- * @property $request Request
- * @property $response Response
- */
-class ResumbableTest extends TestCase
+class ResumableTest extends TestCase
 {
-    public $resumbable;
+    /**
+     * @var Resumable
+     */
+    protected $resumable;
 
-    protected $provider;
+    /**
+     * @var \Psr\Http\Message\ServerRequestInterface
+     */
+    protected $request;
+
+    /**
+     * @var \Psr\Http\Message\ResponseInterface
+     */
+    protected $response;
+
+    /**
+     * @var Psr17Factory
+     */
+    protected $psr17Factory;
 
     protected function setUp(): void
     {
-        $this->request = $this->getMockBuilder('ResumableJs\Network\SimpleRequest')
-            ->getMock();
+        $this->psr17Factory = new Psr17Factory();
 
-        $this->response = $this->getMockBuilder('ResumableJs\Network\SimpleResponse')
-            ->getMock();
+        $this->request = $this->psr17Factory->createServerRequest('GET', 'http://example.com');
+
+        $this->response = $this->psr17Factory->createResponse(200);
     }
 
     public function tearDown(): void
@@ -46,32 +58,31 @@ class ResumbableTest extends TestCase
             'resumableRelativePath' => 'upload',
         ];
 
-        $this->request->method('is')->will($this->returnValue(true));
-
-        $this->request->method('file')
-            ->will(
-                $this->returnValue(
-                    [
-                            'name' => 'mock.png',
-                            'tmp_name' => 'test/files/mock.png.003',
-                            'error' => 0,
-                            'size' => 27000,
-                        ]
+        $this->request = $this->psr17Factory->createServerRequest(
+            'POST',
+            'http://example.com'
+        )
+            ->withParsedBody($resumableParams)
+            ->withUploadedFiles(
+                [
+                new UploadedFile(
+                    'mock.png',
+                    27000, // Size
+                    0 // Error status
                 )
+                ]
             );
 
-        $this->request->method('data')->willReturn($resumableParams);
-
-        $this->resumbable = $this->getMockBuilder('ResumableJs\Resumable')
-            ->setConstructorArgs([$this->request,$this->response])
-            ->setMethods(['handleChunk'])
+        $this->resumable = $this->getMockBuilder(Resumable::class)
+            ->setConstructorArgs([$this->request, $this->response])
+            ->onlyMethods(['handleChunk'])
             ->getMock();
 
-        $this->resumbable->expects($this->once())
+        $this->resumable->expects($this->once())
             ->method('handleChunk')
             ->willReturn(true);
 
-        $this->resumbable->process();
+        $this->assertNotNull($this->resumable->process());
     }
 
     public function testProcessHandleTestChunk()
@@ -85,48 +96,42 @@ class ResumbableTest extends TestCase
             'resumableRelativePath' => 'upload',
         ];
 
-        $this->request->method('is')->will($this->returnValue(true));
+        $this->request = $this->psr17Factory->createServerRequest(
+            'GET',
+            'http://example.com'
+        )->withQueryParams($resumableParams);
 
-        $this->request->method('file')->will($this->returnValue([]));
-
-        $this->request->method('data')->willReturn($resumableParams);
-
-        $this->resumbable = $this->getMockBuilder('ResumableJs\Resumable')
-            ->setConstructorArgs([$this->request,$this->response])
-            ->setMethods(['handleTestChunk'])
+        $this->resumable = $this->getMockBuilder(Resumable::class)
+            ->setConstructorArgs([$this->request, $this->response])
+            ->onlyMethods(['handleTestChunk'])
             ->getMock();
 
-        $this->resumbable->expects($this->once())
+        $this->resumable->expects($this->once())
             ->method('handleTestChunk')
             ->willReturn(true);
 
-        $this->resumbable->process();
+        $this->assertNotNull($this->resumable->process());
     }
 
     public function testHandleTestChunk()
     {
-        $this->request->method('is')
-            ->will($this->returnValue(true));
+        $this->request = $this->psr17Factory->createServerRequest(
+            'GET',
+            'http://example.com'
+        )->withQueryParams(
+            [
+            'resumableChunkNumber' => 1,
+            'resumableTotalChunks' => 600,
+            'resumableChunkSize' => 200,
+            'resumableIdentifier' => 'identifier',
+            'resumableFilename' => 'mock.png',
+            'resumableRelativePath' => 'upload',
+            ]
+        );
 
-        $this->request->method('data')
-            ->willReturn(
-                [
-                           'resumableChunkNumber' => 1,
-                           'resumableTotalChunks' => 600,
-                           'resumableChunkSize' => 200,
-                           'resumableIdentifier' => 'identifier',
-                           'resumableFilename' => 'mock.png',
-                           'resumableRelativePath' => 'upload',
-                    ]
-            );
-
-        $this->response->expects($this->once())
-            ->method('header')
-            ->with($this->equalTo(200));
-
-        $this->resumbable             = new Resumable($this->request, $this->response);
-        $this->resumbable->tempFolder = 'test/tmp';
-        $this->resumbable->handleTestChunk();
+        $this->resumable             = new Resumable($this->request, $this->response);
+        $this->resumable->tempFolder = 'test/tmp';
+        $this->assertNotNull($this->resumable->handleTestChunk());
     }
 
     public function testHandleChunk()
@@ -136,36 +141,36 @@ class ResumbableTest extends TestCase
             'resumableTotalChunks' => 600,
             'resumableChunkSize' => 200,
             'resumableIdentifier' => 'identifier',
-            'resumableFilename' => 'mock.png',
+            'resumableFilename' => 'mock.txt',
             'resumableRelativePath' => 'upload',
         ];
 
+        $uploadsDir = realpath(__DIR__ . '/../../test/uploads');
 
-        $this->request->method('is')
-            ->will($this->returnValue(true));
-
-        $this->request->method('data')
-            ->willReturn($resumableParams);
-
-        $this->request->method('file')
-            ->willReturn(
+        $this->request = $this->psr17Factory->createServerRequest(
+            'POST',
+            'http://example.com'
+        )
+            ->withParsedBody($resumableParams)
+            ->withUploadedFiles(
                 [
-                    'name' => 'mock.png',
-                    'tmp_name' => 'test/files/mock.png.003',
-                    'error' => 0,
-                    'size' => 27000,
+                new UploadedFile(
+                    $uploadsDir . '/mock.txt',
+                    27000, // Size
+                    0 // Error status
+                )
                 ]
             );
 
-        $this->resumbable                  = new Resumable($this->request, $this->response);
-        $this->resumbable->tempFolder      = 'test/tmp';
-        $this->resumbable->uploadFolder    = 'test/uploads';
-        $this->resumbable->deleteTmpFolder = false;
-        $this->resumbable->handleChunk();
+        $this->resumable                  = new Resumable($this->request, $this->response);
+        $this->resumable->tempFolder      = realpath(__DIR__ . '/../../test/tmp');
+        $this->resumable->uploadFolder    = $uploadsDir;
+        $this->resumable->deleteTmpFolder = false;
+        $this->resumable->handleChunk();
 
-        $this->assertFileExists('test/uploads/mock.png');
-        file_exists('test/tmp/identifier/mock.png.003') && unlink('test/tmp/identifier/mock.png.003');
-        unlink('test/uploads/mock.png');
+        $this->assertFileExists('test/uploads/mock.txt');
+        file_exists('test/tmp/identifier/mock.txt.003') && unlink('test/tmp/identifier/mock.txt.003');
+        unlink('test/uploads/mock.txt');
     }
 
     public function testResumableParamsGetRequest()
@@ -179,16 +184,15 @@ class ResumbableTest extends TestCase
             'resumableRelativePath' => 'upload',
         ];
 
-        $this->request = $this->getMockBuilder('ResumableJs\Network\SimpleRequest')
-            ->getMock();
+        $this->request = $this->psr17Factory->createServerRequest(
+            'GET',
+            'http://example.com'
+        )->withQueryParams($resumableParams);
 
-        $this->request->method('is')
-            ->will($this->returnValue(true));
-
-        $this->request->method('data')->willReturn($resumableParams);
-
-        $this->resumbable = new Resumable($this->request, $this->response);
-        $this->assertEquals($resumableParams, $this->resumbable->resumableParams());
+        $this->resumable = new Resumable($this->request, $this->response);
+        $this->assertEquals('GET', $this->request->getMethod());
+        $this->assertEquals($resumableParams, $this->request->getQueryParams());
+        $this->assertEquals($resumableParams, $this->resumable->resumableParams());
     }
 
     public function isFileUploadCompleteProvider()
@@ -206,42 +210,42 @@ class ResumbableTest extends TestCase
      */
     public function testIsFileUploadComplete($filename, $identifier, $chunkSize, $totalSize, $expected)
     {
-        $this->resumbable             = new Resumable($this->request, $this->response);
-        $this->resumbable->tempFolder = 'test';
+        $this->resumable             = new Resumable($this->request, $this->response);
+        $this->resumable->tempFolder = 'test';
         $this->assertEquals(
             $expected,
-            $this->resumbable->isFileUploadComplete($filename, $identifier, $chunkSize, $totalSize)
+            $this->resumable->isFileUploadComplete($filename, $identifier, $chunkSize, $totalSize)
         );
     }
 
     public function testIsChunkUploaded()
     {
-        $this->resumbable             = new Resumable($this->request, $this->response);
-        $this->resumbable->tempFolder = 'test';
-        $identifier                   = 'files';
-        $filename                     = 'mock.png';
-        $this->assertTrue($this->resumbable->isChunkUploaded($identifier, $filename, 1));
-        $this->assertFalse($this->resumbable->isChunkUploaded($identifier, $filename, 10));
+        $this->resumable             = new Resumable($this->request, $this->response);
+        $this->resumable->tempFolder = 'test';
+        $identifier                  = 'files';
+        $filename                    = 'mock.png';
+        $this->assertTrue($this->resumable->isChunkUploaded($identifier, $filename, 1));
+        $this->assertFalse($this->resumable->isChunkUploaded($identifier, $filename, 10));
     }
 
     public function testTmpChunkDir()
     {
-        $this->resumbable             = new Resumable($this->request, $this->response);
-        $this->resumbable->tempFolder = 'test';
-        $identifier                   = 'mock-identifier';
-        $expected                     = $this->resumbable->tempFolder . DIRECTORY_SEPARATOR . $identifier;
-        $this->assertEquals($expected, $this->resumbable->tmpChunkDir($identifier));
+        $this->resumable             = new Resumable($this->request, $this->response);
+        $this->resumable->tempFolder = 'test';
+        $identifier                  = 'mock-identifier';
+        $expected                    = $this->resumable->tempFolder . DIRECTORY_SEPARATOR . $identifier;
+        $this->assertEquals($expected, $this->resumable->tmpChunkDir($identifier));
         $this->assertFileExists($expected);
         rmdir($expected);
     }
 
     public function testTmpChunkFile()
     {
-        $this->resumbable = new Resumable($this->request, $this->response);
-        $filename         = 'mock-file.png';
-        $chunkNumber      = str_pad('1', 4, '0', STR_PAD_LEFT);
-        $expected         = $filename . '.' . $chunkNumber;
-        $this->assertEquals($expected, $this->resumbable->tmpChunkFilename($filename, $chunkNumber));
+        $this->resumable = new Resumable($this->request, $this->response);
+        $filename        = 'mock-file.png';
+        $chunkNumber     = str_pad('1', 4, '0', STR_PAD_LEFT);
+        $expected        = $filename . '.' . $chunkNumber;
+        $this->assertEquals($expected, $this->resumable->tmpChunkFilename($filename, $chunkNumber));
     }
 
     public function testCreateFileFromChunks()
@@ -260,8 +264,8 @@ class ResumbableTest extends TestCase
         );
         $destFile      = 'test/files/5.png';
 
-        $this->resumbable = new Resumable($this->request, $this->response);
-        $this->resumbable->createFileFromChunks($files, $destFile);
+        $this->resumable = new Resumable($this->request, $this->response);
+        $this->resumable->createFileFromChunks($files, $destFile);
         $this->assertFileExists($destFile);
         $this->assertEquals($totalFileSize, filesize($destFile));
         unlink('test/files/5.png');
@@ -269,9 +273,9 @@ class ResumbableTest extends TestCase
 
     public function testMoveUploadedFile()
     {
-        $destFile         = 'test/files/4.png';
-        $this->resumbable = new Resumable($this->request, $this->response);
-        $this->resumbable->moveUploadedFile('test/files/mock.png.0001', $destFile);
+        $destFile        = 'test/files/4.png';
+        $this->resumable = new Resumable($this->request, $this->response);
+        $this->resumable->moveUploadedFile('test/files/mock.png.0001', $destFile);
         $this->assertFileExists($destFile);
         unlink($destFile);
     }

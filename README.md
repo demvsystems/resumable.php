@@ -1,6 +1,5 @@
 # PHP backend for resumable.js
 
-
 ## Installation
 
 To install, use composer:
@@ -17,12 +16,10 @@ composer require code-lts/resumable.php
 <?php
 include __DIR__ . '/vendor/autoload.php';
 
-use ResumableJs\Network\SimpleRequest;
-use ResumableJs\Network\SimpleResponse;
 use ResumableJs\Resumable;
 
-$request = new SimpleRequest();
-$response = new SimpleResponse();
+// Any library that implements Psr\Http\Message\{ServerRequestInterface, ResponseInterface};
+// See https://github.com/Nyholm/psr7 as a tested example
 
 $resumable = new Resumable($request, $response);
 $resumable->tempFolder = 'tmps';

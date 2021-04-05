@@ -10,11 +10,13 @@
     "require": {
         "php": "^7.1 || ^8.0",
         "cakephp/filesystem": "^3.0",
-        "psr/log": "^1.1"
+        "psr/log": "^1.1",
+        "psr/http-message": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^7 || ^8 || ^9",
-        "wdes/coding-standard": "^3.0"
+        "wdes/coding-standard": "^3.0",
+        "nyholm/psr7": "^1.4"
     },
     "scripts": {
         "phpunit": "./vendor/bin/phpunit",
