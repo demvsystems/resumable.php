@@ -169,7 +169,7 @@ class ResumableTest extends TestCase
             $this->resumable->isChunkUploaded(
                 $resumableParams['resumableIdentifier'],
                 $resumableParams['resumableFilename'],
-                $resumableParams['resumableChunkNumber'],
+                $resumableParams['resumableChunkNumber']
             ),
             'The file should not exist'
         );
@@ -178,7 +178,7 @@ class ResumableTest extends TestCase
             $this->resumable->isChunkUploaded(
                 $resumableParams['resumableIdentifier'],
                 $resumableParams['resumableFilename'],
-                $resumableParams['resumableChunkNumber'],
+                $resumableParams['resumableChunkNumber']
             ),
             'The file should exist'
         );
