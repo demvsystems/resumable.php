@@ -1,0 +1,22 @@
+name: Lint and analyse files
+
+on: [push]
+
+jobs:
+    lint-php:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Cache module
+              uses: actions/cache@v2
+              with:
+                  path: ~/.composer/cache/
+                  key: composer-cache
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "7.4"
+            - name: Install dependencies
+              run: composer install --no-interaction
+            - name: Lint files
+              run: composer run phpcs
