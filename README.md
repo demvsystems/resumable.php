@@ -16,7 +16,7 @@ composer require code-lts/resumable.php
 <?php
 include __DIR__ . '/vendor/autoload.php';
 
-use ResumableJs\Resumable;
+use Dilab\Resumable;
 
 // Any library that implements Psr\Http\Message\{ServerRequestInterface, ResponseInterface};
 // See https://github.com/Nyholm/psr7 as a tested example

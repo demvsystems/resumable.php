@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace ResumableJs\Test;
+namespace Dilab\Test;
 
-use ResumableJs\Resumable;
+use Dilab\Resumable;
 use PHPUnit\Framework\TestCase;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\UploadedFile;
