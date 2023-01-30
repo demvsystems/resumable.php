@@ -81,7 +81,7 @@ class ResumableTest extends TestCase
 
         $this->resumable->expects($this->once())
             ->method('handleChunk')
-            ->willReturn(true);
+            ->willReturn($this->response);
 
         $this->assertNotNull($this->resumable->process());
     }
@@ -110,7 +110,7 @@ class ResumableTest extends TestCase
 
         $this->resumable->expects($this->once())
             ->method('handleTestChunk')
-            ->willReturn(true);
+            ->willReturn($this->response);
 
         $this->assertNotNull($this->resumable->process());
     }
@@ -138,6 +138,8 @@ class ResumableTest extends TestCase
 
     public function testHandleChunk(): void
     {
+        @unlink('test/tmp/identifier/mock.png.0003');
+        @unlink('test/uploads/mock.png');
         $resumableParams = [
             'resumableChunkNumber' => 3,
             'resumableTotalChunks' => 600,

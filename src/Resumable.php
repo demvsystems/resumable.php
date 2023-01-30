@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Dilab;
 
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\Filesystem;
+use Gaufrette\Filesystem;
+use Gaufrette\Adapter\Local as LocalFilesystemAdapter;
+use Gaufrette\StreamMode;
 use Psr\Log\LoggerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -317,15 +318,16 @@ class Resumable
         natsort($chunkFiles);
 
         // create destination file to steam the chunks into
-        $stream = fopen($destFile, "w+");
+        $stream = $this->fileSystem->createFile($destFile)->createStream();
+        $stream->open(new StreamMode('x'));
 
         foreach ($chunkFiles as $chunkFile) {
-            $chunk_stream = $this->fileSystem->read($chunkFile);
-            $stream->write();
+            $stream->write($this->fileSystem->read($chunkFile));
             $this->log('Append ', ['chunk file' => $chunkFile]);
         }
 
-        fclose($stream);
+        $stream->flush();
+        $stream->close();
 
         $this->log('End of create files from chunks');
 
