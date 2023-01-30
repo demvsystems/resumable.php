@@ -6,8 +6,8 @@
     <arg name="colors"/>
 
     <file>.</file>
-    <exclude-pattern>*/vendor/*</exclude-pattern>
-    <exclude-pattern>*/build/*</exclude-pattern>
-    <rule ref="phpcs.demv.xml"></rule>
+    <rule ref="phpcs.demv.xml">
+        <exclude-pattern>*/vendor/*</exclude-pattern>
+    </rule>
 
 </ruleset>
