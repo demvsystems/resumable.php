@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace Dilab;
 
-use Gaufrette\Filesystem;
 use Gaufrette\Adapter\Local as LocalFilesystemAdapter;
+use Gaufrette\Filesystem;
 use Gaufrette\StreamMode;
-use Psr\Log\LoggerInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerInterface;
 
 class Resumable
 {
-
-    public const HTTP_OK = 200;
+    public const HTTP_OK         = 200;
     public const HTTP_NO_CONTENT = 204;
 
     protected bool $debug = false;
@@ -371,5 +370,4 @@ class Resumable
     {
         $this->debug = $debug;
     }
-
 }
