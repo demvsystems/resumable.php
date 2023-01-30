@@ -3,7 +3,7 @@
     <arg name="encoding" value="utf-8"/>
 
     <!-- Add extensions -->
-    <config name="installed_paths" value="vendor/slevomat/coding-standard"/>
+    <config name="installed_paths" value="../../slevomat/coding-standard"/>
 
     <!-- Ruleset base -->
     <rule ref="PSR12">
@@ -249,10 +249,11 @@
         </properties>
     </rule>
 
-    <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes">
+    <!-- TODO enable before using PHPStan and stuff -->
+    <!--<rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes">
         <properties>
             <property name="newlinesCountBetweenOpenTagAndDeclare" value="2"/>
             <property name="spacesCountAroundEqualsSign" value="0"/>
         </properties>
-    </rule>
+    </rule>-->
 </ruleset>

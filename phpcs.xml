@@ -1,13 +1,6 @@
 <?xml version="1.0"?>
-<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vendor/squizlabs/php_codesniffer/phpcs.xsd">
-
-    <!-- Show progress and sniff codes -->
-    <arg value="ps"/>
-    <arg name="colors"/>
-
-    <file>.</file>
-    <rule ref="phpcs.demv.xml">
-        <exclude-pattern>*/vendor/*</exclude-pattern>
-    </rule>
-
+<ruleset>
+    <arg name="basepath" value="."/>
+    <file>src</file>
+    <rule ref="./phpcs.dist.xml"/>
 </ruleset>
