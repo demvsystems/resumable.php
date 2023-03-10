@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 
 class Resumable
 {
-    public const HTTP_OK = 200;
+    public const HTTP_OK         = 200;
     public const HTTP_NO_CONTENT = 204;
 
     public const WITHOUT_EXTENSION = true;
@@ -56,21 +56,22 @@ class Resumable
     protected bool $isUploadComplete = false;
 
     protected array $resumableOption = [
-        'identifier' => 'identifier',
-        'filename' => 'filename',
+        'identifier'  => 'identifier',
+        'filename'    => 'filename',
         'chunkNumber' => 'chunkNumber',
-        'chunkSize' => 'chunkSize',
-        'totalSize' => 'totalSize',
+        'chunkSize'   => 'chunkSize',
+        'totalSize'   => 'totalSize',
     ];
 
     public function __construct(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        ?LoggerInterface $logger = null,
-        ?Filesystem $fileSystem = null
-    ) {
-        $this->request = $request;
-        $this->response = $response;
+        ResponseInterface      $response,
+        ?LoggerInterface       $logger = null,
+        ?Filesystem            $fileSystem = null
+    )
+    {
+        $this->request    = $request;
+        $this->response   = $response;
         $this->fileSystem = $fileSystem ?? $this->getFileSystem();
 
         $this->logger = $logger;
@@ -80,8 +81,8 @@ class Resumable
 
     protected function getFileSystem(): Filesystem
     {
-        $cwd = getcwd();
-        $cwd = $cwd === false ? __DIR__ : $cwd;
+        $cwd     = getcwd();
+        $cwd     = $cwd === false ? __DIR__ : $cwd;
         $adapter = new LocalFilesystemAdapter($cwd);
 
         return new Filesystem($adapter);
@@ -101,7 +102,7 @@ class Resumable
     {
         if (!empty($this->resumableParams())) {
             if (!empty($this->request->getUploadedFiles())) {
-                $this->extension = $this->findExtension($this->resumableParam('filename'));
+                $this->extension        = $this->findExtension($this->resumableParam('filename'));
                 $this->originalFilename = $this->resumableParam('filename');
             }
         }
@@ -158,14 +159,14 @@ class Resumable
      * Ensures that the original file extension never gets overridden by user
      * defined filenames.
      *
-     * @param string $filename User defined filename
+     * @param string $filename         User defined filename
      * @param string $originalFilename Original filename
      *
      * @return string Filename which always has the same extension as the original file
      */
     private function createSafeFilename(string $filename, string $originalFilename): string
     {
-        $filename = $this->removeExtension($filename);
+        $filename  = $this->removeExtension($filename);
         $extension = $this->findExtension($originalFilename);
 
         return sprintf('%s.%s', $filename, $extension);
@@ -176,8 +177,8 @@ class Resumable
      */
     public function handleTestChunk(): ResponseInterface
     {
-        $identifier = $this->resumableParam($this->resumableOption['identifier']);
-        $filename = $this->resumableParam($this->resumableOption['filename']);
+        $identifier  = $this->resumableParam($this->resumableOption['identifier']);
+        $filename    = $this->resumableParam($this->resumableOption['filename']);
         $chunkNumber = $this->resumableParam($this->resumableOption['chunkNumber']);
 
         if (!$this->isChunkUploaded($identifier, $filename, $chunkNumber)) {
@@ -192,16 +193,16 @@ class Resumable
      */
     public function handleChunk()
     {
-        /** @var \Psr\Http\Message\UploadedFileInterface $file */
-        $file = $this->request->getUploadedFiles()[0];
-        $identifier = $this->resumableParam($this->resumableOption['identifier']);
-        $filename = $this->resumableParam($this->resumableOption['filename']);
-        $chunkNumber = $this->resumableParam($this->resumableOption['chunkNumber']);
-        $chunkSize = $this->resumableParam($this->resumableOption['chunkSize']);
-        $totalSize = $this->resumableParam($this->resumableOption['totalSize']);
+        $files       = $this->request->getUploadedFiles();
+        $file        = array_pop($files);
+        $identifier  = $this->resumableParam($this->resumableOption['identifier']);
+        $filename    = $this->resumableParam($this->resumableOption['filename']);
+        $chunkNumber = (int) $this->resumableParam($this->resumableOption['chunkNumber']);
+        $chunkSize   = (int) $this->resumableParam($this->resumableOption['chunkSize']);
+        $totalSize   = (int) $this->resumableParam($this->resumableOption['totalSize']);
 
         if (!$this->isChunkUploaded($identifier, $filename, $chunkNumber)) {
-            $chunkDir = $this->tmpChunkDir($identifier) . DIRECTORY_SEPARATOR;
+            $chunkDir  = $this->tmpChunkDir($identifier) . DIRECTORY_SEPARATOR;
             $chunkFile = $chunkDir . $this->tmpChunkFilename($filename, $chunkNumber);
 
             $file->moveTo($chunkFile);
@@ -220,7 +221,7 @@ class Resumable
      */
     private function createFileAndDeleteTmp(string $identifier, ?string $filename): void
     {
-        $chunkDir = $this->tmpChunkDir($identifier);
+        $chunkDir   = $this->tmpChunkDir($identifier);
         $chunkFiles = $this->fileSystem->listKeys(
             $chunkDir
         )['keys'];
@@ -231,7 +232,7 @@ class Resumable
             : $filename;
 
         // replace filename reference by the final file
-        $this->filepath = $this->uploadFolder . DIRECTORY_SEPARATOR . $finalFilename;
+        $this->filepath  = $this->uploadFolder . DIRECTORY_SEPARATOR . $finalFilename;
         $this->extension = $this->findExtension($this->filepath);
 
         if (!$this->createFileFromChunks($chunkFiles, $this->filepath) || !$this->deleteTmpFolder) {
@@ -248,7 +249,7 @@ class Resumable
     private function resumableParam(string $shortName)
     {
         $resumableParams = $this->resumableParams();
-        $param = 'resumable' . ucfirst($shortName);
+        $param           = 'resumable' . ucfirst($shortName);
 
         if (!isset($resumableParams[$param])) {
             return null;
@@ -300,7 +301,14 @@ class Resumable
 
     public function tmpChunkDir(string $identifier): string
     {
-        return $this->tempFolder . DIRECTORY_SEPARATOR . $identifier;
+        $tmpChunkDir = $this->tempFolder . DIRECTORY_SEPARATOR . $identifier;
+        if (!file_exists($tmpChunkDir)) {
+            if (!mkdir($tmpChunkDir) && !is_dir($tmpChunkDir)) {
+                // TODO: except or die or something
+            }
+        }
+
+        return $tmpChunkDir;
     }
 
     /**
@@ -363,7 +371,7 @@ class Resumable
     private function removeExtension(string $filename): string
     {
         $parts = explode('.', basename($filename));
-        $ext = end($parts); // get extension
+        $ext   = end($parts); // get extension
 
         // remove extension from filename if any
         return str_replace(sprintf('.%s', $ext), '', $filename);
